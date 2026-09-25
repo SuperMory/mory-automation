@@ -35,6 +35,8 @@ export class ModalMouseClick extends ModalBase {
   show() {
     const mods = this.config.modifiers || {};
     const isCoord = this.config.clickPosition === 'coord';
+    const isSec = this.config.delayUnit === 's';
+    const displayDelay = isSec ? ((this.config.delay || 0) / 1000) : (this.config.delay || 0);
     const html = `
       <div class="mory-info-tip">
         <span class="mory-info-icon">ⓘ</span>
@@ -126,10 +128,10 @@ export class ModalMouseClick extends ModalBase {
 
       <div class="mory-form-row mory-flex-align" style="margin-top: 18px;">
         <label class="mory-label-inline">延迟</label>
-        <input type="number" class="mory-input mory-input-number" id="inp-delay" value="${this.config.delay}" min="0" step="10">
+        <input type="number" class="mory-input mory-input-number" id="inp-delay" value="${displayDelay}" min="0" step="${isSec ? '0.1' : '10'}">
         <select class="mory-select" id="sel-delay-unit" style="margin-left: 6px; width: 80px;">
-          <option value="ms" selected>毫秒</option>
-          <option value="s">秒</option>
+          <option value="ms" ${!isSec ? 'selected' : ''}>毫秒</option>
+          <option value="s" ${isSec ? 'selected' : ''}>秒</option>
         </select>
         <span class="mory-suffix-text">后执行下一个动作</span>
       </div>
@@ -141,6 +143,21 @@ export class ModalMouseClick extends ModalBase {
   }
 
   bindEvents(el) {
+    const selUnit = el.querySelector('#sel-delay-unit');
+    const inpDelay = el.querySelector('#inp-delay');
+    if (selUnit && inpDelay) {
+      selUnit.addEventListener('change', () => {
+        const val = Number(inpDelay.value) || 0;
+        if (selUnit.value === 's') {
+          if (val >= 1000) inpDelay.value = (val / 1000).toFixed(1).replace(/\.0$/, '');
+          inpDelay.step = '0.1';
+        } else {
+          inpDelay.value = Math.round(val * 1000);
+          inpDelay.step = '10';
+        }
+      });
+    }
+
     const radios = el.querySelectorAll('input[name="rad-click-pos"]');
     const rowCoord = el.querySelector('#row-click-coord');
     const pickBtn = el.querySelector('#btn-pick-click-coord');
@@ -198,9 +215,9 @@ export class ModalMouseClick extends ModalBase {
       leftWin: this.modalEl.querySelector('#mod-l-win').checked,
       rightWin: this.modalEl.querySelector('#mod-r-win').checked
     };
-    const rawDelay = Number(this.modalEl.querySelector('#inp-delay').value) || 0;
+    const rawDelay = Math.max(0, Number(this.modalEl.querySelector('#inp-delay').value) || 0);
     const unit = this.modalEl.querySelector('#sel-delay-unit').value;
-    const delay = unit === 's' ? rawDelay * 1000 : rawDelay;
+    const delay = unit === 's' ? Math.round(rawDelay * 1000) : Math.round(rawDelay);
 
     return {
       clickPosition: isCoord ? 'coord' : 'current',

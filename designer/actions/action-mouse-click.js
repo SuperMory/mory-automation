@@ -46,7 +46,8 @@ export const ActionMouseClick = {
       text += ` + [${[...new Set(activeMods)].join('+')}]`;
     }
     if (config.delay > 0) {
-      text += ` | 延时${config.delay}ms`;
+      const delayStr = (config.delay >= 1000 && config.delay % 1000 === 0) ? `${config.delay / 1000}秒` : `${config.delay}ms`;
+      text += ` | 延时${delayStr}`;
     }
     return text;
   },

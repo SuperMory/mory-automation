@@ -26,7 +26,8 @@ export const ActionMouseScroll = {
     const dirMap = { down: '向下', up: '向上', left: '向左', right: '向右' };
     let text = `${config.scrollType === 'vertical' ? '垂直' : '水平'} ${dirMap[config.direction] || '向下'} ${config.steps} 步`;
     if (config.delay > 0) {
-      text += ` | 延时${config.delay}ms`;
+      const delayStr = (config.delay >= 1000 && config.delay % 1000 === 0) ? `${config.delay / 1000}秒` : `${config.delay}ms`;
+      text += ` | 延时${delayStr}`;
     }
     return text;
   },

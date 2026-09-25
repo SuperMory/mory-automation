@@ -116,6 +116,12 @@ export class FlowExecutor {
       if (res && res.success) {
         this.onNodeStateChange(node.id, 'success');
         this.logger.success(`[单步调试] 节点执行完成 ✔`);
+        const postDelay = Math.max(0, Number(node.config?.delay || 0));
+        if (postDelay > 0 && !this.isStopRequested) {
+          const stepTitle = node.name || actionDef.name || '步骤';
+          this.logger.info(`[单步调试] 步骤【${stepTitle}】等待后置延迟 ${postDelay}ms...`);
+          await context.sleep(postDelay, `${stepTitle} 延迟`);
+        }
       } else {
         this.onNodeStateChange(node.id, 'error');
         this.logger.error(`[单步调试] 节点执行失败 ❌: ${res?.error || ''}`);
@@ -216,6 +222,18 @@ export class FlowExecutor {
       if (result && result.stopWorkflow) {
         this.logger.info('[执行器] 流程按配置指示正常结束');
         break;
+      }
+
+      // Check for node-level post execution delay ("延迟 X 毫秒后执行下一个动作")
+      const postDelay = Math.max(0, Number(curNode.config?.delay || 0));
+      if (postDelay > 0 && !this.isStopRequested && !result.stopWorkflow) {
+        const stepTitle = curNode.name || actionDef.name || '步骤';
+        this.logger.info(`[执行器] 步骤【${stepTitle}】执行完成，等待后置延迟 ${postDelay}ms...`);
+        const sleepRes = await context.sleep(postDelay, `${stepTitle} 延迟`);
+        if (sleepRes && sleepRes.cancelled) {
+          this.logger.warn(`[执行器] 步骤【${stepTitle}】后置延迟等待被用户终止`);
+          break;
+        }
       }
 
       // Check if jumpToNodeId is specified (Goto step)

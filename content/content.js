@@ -219,7 +219,7 @@
             action: 'MOVE_MOUSE',
             coords: { x: cursorX, y: cursorY }
           });
-        }, Number(delay || 0));
+        }, 0);
         return true;
       }
 
@@ -315,7 +315,7 @@
             element: targetElement.tagName,
             coords: { x: cursorX, y: cursorY }
           });
-        }, Number(delay || 0));
+        }, 0);
         return true;
       }
 
@@ -362,7 +362,7 @@
             action: 'MOUSE_SCROLL',
             delta: { deltaX, deltaY }
           });
-        }, Number(delay || 0));
+        }, 0);
         return true;
       }
 
@@ -433,7 +433,7 @@
 
         setTimeout(() => {
           sendResponse({ success: true, hotkey });
-        }, Number(delay || 0));
+        }, 0);
         return true;
       }
 
@@ -481,9 +481,6 @@
             if (charDelay > 0) {
               await new Promise(r => setTimeout(r, charDelay));
             }
-          }
-          if (delay > 0) {
-            await new Promise(r => setTimeout(r, delay));
           }
           sendResponse({ success: true, count: text.length });
         })();
