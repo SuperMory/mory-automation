@@ -1,0 +1,143 @@
+{
+  "version": "1.0.0",
+  "name": "魔力自动化综合流程示例",
+  "description": "包含流程起点、文字识别、拟人化随机等待、快捷键、鼠标滚轮的完整自动化排线工作流",
+  "nodes": [
+    {
+      "id": "start",
+      "name": "开始",
+      "type": "flow_start",
+      "x": 60,
+      "y": 80,
+      "config": {
+        "startDelay": 0,
+        "remark": "魔力自动化流程总起点"
+      }
+    },
+    {
+      "id": "node_ocr",
+      "name": "文字识别",
+      "type": "ocr_text",
+      "x": 350,
+      "y": 80,
+      "config": {
+        "targetText": "确认登录",
+        "region": {
+          "x1": 0,
+          "y1": 0,
+          "x2": 1920,
+          "y2": 1080
+        },
+        "minSimilarity": 90,
+        "repeatMode": "times",
+        "repeatTimes": 1,
+        "intervalMs": 200,
+        "onSuccess": {
+          "enabled": true,
+          "mouseAction": "click",
+          "targetPosition": "center",
+          "copyToClipboard": true,
+          "nextAction": "continue"
+        },
+        "onFailure": {
+          "enabled": true,
+          "waitTime": 200,
+          "waitUnit": "ms",
+          "nextAction": "continue"
+        }
+      }
+    },
+    {
+      "id": "node_random_wait",
+      "name": "随机等待时间",
+      "type": "random_wait",
+      "x": 640,
+      "y": 80,
+      "config": {
+        "minMs": 50,
+        "maxMs": 200
+      }
+    },
+    {
+      "id": "node_hotkey",
+      "name": "快捷按键",
+      "type": "hotkey",
+      "x": 930,
+      "y": 80,
+      "config": {
+        "hotkey": "Ctrl+C",
+        "delay": 150,
+        "delayUnit": "ms"
+      }
+    },
+    {
+      "id": "node_mouse_scroll",
+      "name": "滚动滚轮",
+      "type": "mouse_scroll",
+      "x": 1220,
+      "y": 80,
+      "config": {
+        "scrollType": "vertical",
+        "direction": "down",
+        "steps": 2,
+        "delay": 200,
+        "delayUnit": "ms"
+      }
+    },
+    {
+      "id": "node_wait_time",
+      "name": "等待时间",
+      "type": "wait_time",
+      "x": 1510,
+      "y": 80,
+      "config": {
+        "duration": 500,
+        "unit": "ms"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_start",
+      "fromNode": "start",
+      "fromPort": "default",
+      "toNode": "node_ocr",
+      "toPort": "in"
+    },
+    {
+      "id": "edge_1",
+      "fromNode": "node_ocr",
+      "fromPort": "success",
+      "toNode": "node_random_wait",
+      "toPort": "in"
+    },
+    {
+      "id": "edge_2",
+      "fromNode": "node_ocr",
+      "fromPort": "failure",
+      "toNode": "node_random_wait",
+      "toPort": "in"
+    },
+    {
+      "id": "edge_3",
+      "fromNode": "node_random_wait",
+      "fromPort": "default",
+      "toNode": "node_hotkey",
+      "toPort": "in"
+    },
+    {
+      "id": "edge_4",
+      "fromNode": "node_hotkey",
+      "fromPort": "default",
+      "toNode": "node_mouse_scroll",
+      "toPort": "in"
+    },
+    {
+      "id": "edge_5",
+      "fromNode": "node_mouse_scroll",
+      "fromPort": "default",
+      "toNode": "node_wait_time",
+      "toPort": "in"
+    }
+  ]
+}

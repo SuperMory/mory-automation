@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Mory RPA 自动化测试目标网页</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 30px;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 2400px; /* Long page for scroll testing */
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    h1 {
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+    .section {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .btn-green { background: #10b981; color: #fff; }
+    .btn-green:hover { background: #059669; }
+    .btn-blue { background: #3b82f6; color: #fff; }
+    .btn-blue:hover { background: #2563eb; }
+    .btn-orange { background: #f97316; color: #fff; }
+    .btn-orange:hover { background: #ea580c; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .status-badge.clicked {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .scroll-indicator {
+      margin-top: 300px;
+      padding: 30px;
+      background: #f8fafc;
+      border: 2px dashed #94a3b8;
+      border-radius: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Mory RPA 自动化目标测试网页</h1>
+    <p>这是一个专门用于测试 Chrome / Edge 插件自动化流程的测试网页，包含按钮点击计数、找图标靶、长页面滚动等功能。</p>
+
+    <!-- 鼠标移动与点击测试 -->
+    <div class="section">
+      <div class="section-title">1. 鼠标移动与点击测试靶区</div>
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-green" id="btn-test-1">
+          🟢 确认登录 (点击我)
+        </button>
+        <button type="button" class="btn btn-blue" id="btn-test-2">
+          🔵 提交表单 (双击我)
+        </button>
+        <button type="button" class="btn btn-orange" id="btn-test-3">
+          🟠 右键菜单 (右键我)
+        </button>
+      </div>
+      <div style="margin-top: 14px;">
+        <span>状态反馈: </span>
+        <span class="status-badge" id="feedback-badge">等待操作...</span>
+        <span style="margin-left: 12px; font-size: 13px; color: #64748b;" id="click-counter">累计点击: 0 次</span>
+      </div>
+    </div>
+
+    <!-- 图像识别找图靶区 -->
+    <div class="section">
+      <div class="section-title">2. 图像识别（找图）目标标志</div>
+      <p style="font-size: 13px;">可以用插件的【找图】功能框选下方的彩色图案或图标进行模板匹配测试：</p>
+      <div style="display: flex; gap: 24px; align-items: center;">
+        <div id="target-icon-box" style="width: 100px; height: 60px; background: #6366f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+          ⭐ VIP标志
+        </div>
+
+        <div style="width: 120px; height: 44px; background: #ec4899; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 13px;">
+          🚀 立即兑换
+        </div>
+      </div>
+    </div>
+
+    <!-- 文字识别与快捷按键测试区 -->
+    <div class="section">
+      <div class="section-title">3. 文字识别与快捷按键测试区</div>
+      <p style="font-size: 13px;">使用【文字识别】搜索页面中的关键字（如：<code>自动填充体验卡</code>），或使用【快捷按键】测试复制/粘贴到输入框：</p>
+      <div style="margin-bottom: 12px;">
+        <span style="font-size: 15px; font-weight: 700; color: #059669; padding: 4px 10px; background: #ecfdf5; border-radius: 6px; border: 1px dashed #10b981;">
+          自动填充体验卡
+        </span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <input type="text" id="test-input-box" value="原始默认文本内容" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 260px;" placeholder="在此测试全选/复制/粘贴快捷键">
+        <span id="input-event-tip" style="font-size: 12px; color: #64748b;">支持键盘快捷键监听</span>
+      </div>
+    </div>
+
+    <!-- 滚动测试区 -->
+    <div class="section">
+      <div class="section-title">4. 滚轮滚动测试</div>
+      <p style="font-size: 13px;">当前滚动位置: <strong id="lbl-scroll-pos">0 px</strong> (向下滚动可观察)</p>
+    </div>
+
+    <div class="scroll-indicator">
+      <h3>📜 滚动靶区 A (距离顶部 800px)</h3>
+      <p>当你执行【滚动滚轮】动作时，页面会平滑滚动到这里。</p>
+      <button class="btn btn-green" onclick="alert('恭喜！自动化滚动成功并点击了深层按钮！')">✔ 目标深层操作按钮</button>
+    </div>
+
+    <div class="scroll-indicator" style="margin-top: 600px;">
+      <h3>📜 滚动靶区 B (距离顶部 1600px)</h3>
+      <p>页面底部深层区域</p>
+    </div>
+  </div>
+
+  <script>
+    let count = 0;
+    const badge = document.getElementById('feedback-badge');
+    const counter = document.getElementById('click-counter');
+
+    function updateClick(btnName, evtType) {
+      count++;
+      badge.textContent = `[${new Date().toLocaleTimeString()}] 触发了 ${btnName} 的 ${evtType} 事件！`;
+      badge.classList.add('clicked');
+      counter.textContent = `累计点击: ${count} 次`;
+    }
+
+    document.getElementById('btn-test-1').addEventListener('click', () => updateClick('确认登录按钮', 'click'));
+    document.getElementById('btn-test-2').addEventListener('dblclick', () => updateClick('提交表单按钮', 'dblclick'));
+    document.getElementById('btn-test-3').addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      updateClick('右键菜单按钮', 'contextmenu');
+    });
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('lbl-scroll-pos').textContent = `${Math.round(window.scrollY)} px`;
+    });
+
+    const testInput = document.getElementById('test-input-box');
+    const inputTip = document.getElementById('input-event-tip');
+    testInput.addEventListener('keydown', (e) => {
+      inputTip.textContent = `监听到按键: ${e.ctrlKey ? 'Ctrl+' : ''}${e.key}`;
+      inputTip.style.color = '#10b981';
+    });
+    testInput.addEventListener('copy', () => {
+      inputTip.textContent = `触发了复制 (Copy) 事件！`;
+      inputTip.style.color = '#10b981';
+    });
+    testInput.addEventListener('paste', () => {
+      inputTip.textContent = `触发了粘贴 (Paste) 事件！`;
+      inputTip.style.color = '#10b981';
+    });
+  </script>
+</body>
+</html>

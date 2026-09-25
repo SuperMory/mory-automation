@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Mory RPA Desktop Screen Picker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.01);
+      cursor: crosshair;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+
+    #desktop-bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      display: block;
+    }
+
+    #picker-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10;
+    }
+
+    /* Top Instruction Banner */
+    #top-banner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #f8fafc;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .banner-badge {
+      background: #10b981;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* Crosshairs */
+    #crosshair-h, #crosshair-v {
+      position: fixed;
+      background: rgba(16, 185, 129, 0.85);
+      pointer-events: none;
+      z-index: 20;
+    }
+    #crosshair-h { left: 0; right: 0; height: 1px; }
+    #crosshair-v { top: 0; bottom: 0; width: 1px; }
+
+    /* Selection Box */
+    #selection-box {
+      position: fixed;
+      display: none;
+      border: 2px solid #10b981;
+      background: rgba(16, 185, 129, 0.18);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    /* Magnifier */
+    #magnifier {
+      position: fixed;
+      width: 140px;
+      height: 180px;
+      background: #0f172a;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+      z-index: 9998;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #mag-canvas {
+      width: 140px;
+      height: 115px;
+      image-rendering: pixelated;
+      background: #000;
+    }
+
+    .mag-footer {
+      flex: 1;
+      background: #1e293b;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .mag-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mag-color-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid #475569;
+    }
+
+    .mag-val {
+      font-family: monospace;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <!-- Frozen background canvas capturing the desktop at snip start -->
+  <canvas id="desktop-bg-canvas"></canvas>
+
+  <div id="picker-overlay">
+    <div id="top-banner">
+      <span class="banner-badge" id="banner-mode-badge">屏幕选取</span>
+      <span id="banner-text">按住鼠标左键拖拽选区，松开或按 Enter 确认，按 ESC 取消</span>
+    </div>
+
+    <div id="crosshair-h"></div>
+    <div id="crosshair-v"></div>
+    <div id="selection-box"></div>
+
+    <div id="magnifier">
+      <canvas id="mag-canvas" width="140" height="115"></canvas>
+      <div class="mag-footer">
+        <div class="mag-row">
+          <span>坐标:</span>
+          <span class="mag-val" id="mag-coords">0, 0</span>
+        </div>
+        <div class="mag-row">
+          <span>RGB:</span>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <div class="mag-color-thumb" id="mag-color-thumb"></div>
+            <span class="mag-val" id="mag-color-hex">#000000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const bgCanvas = document.getElementById('desktop-bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    const magCanvas = document.getElementById('mag-canvas');
+    const magCtx = magCanvas.getContext('2d');
+    const magnifierEl = document.getElementById('magnifier');
+    const crosshairH = document.getElementById('crosshair-h');
+    const crosshairV = document.getElementById('crosshair-v');
+    const selectionBoxEl = document.getElementById('selection-box');
+
+    let mode = 'region';
+    let isMouseDown = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    let snapshotImg = null;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    ipcRenderer.on('INIT_PICKER', (event, data) => {
+      mode = data.mode || 'region';
+      const badge = document.getElementById('banner-mode-badge');
+      const text = document.getElementById('banner-text');
+
+      if (mode === 'coordinate') {
+        badge.textContent = '坐标拾取';
+        text.textContent = '移动鼠标选择目标位置，键盘方向键微调(按住Shift步长10)，单击左键或按 Enter 确认，按 ESC 取消';
+      } else if (mode === 'color') {
+        badge.textContent = '颜色吸取';
+        text.textContent = '移动放大镜对准目标像素，键盘方向键微调，单击左键吸取颜色，按 ESC 取消';
+      } else if (mode === 'snip') {
+        badge.textContent = '原生无损截图';
+        text.textContent = '按住鼠标左键框选待查找的目标区域，方向键微调，松开完成裁剪，按 ESC 取消';
+      } else {
+        badge.textContent = '区域选择';
+        text.textContent = '按住鼠标左键框选矩形区域，方向键微调，松开完成，按 ESC 取消';
+      }
+
+      if (data.screenshotDataUrl) {
+        snapshotImg = new Image();
+        snapshotImg.onload = () => {
+          // Render snapshot to fit viewport
+          bgCanvas.width = window.innerWidth;
+          bgCanvas.height = window.innerHeight;
+          bgCtx.drawImage(snapshotImg, 0, 0, bgCanvas.width, bgCanvas.height);
+          
+          scaleX = snapshotImg.width / window.innerWidth;
+          scaleY = snapshotImg.height / window.innerHeight;
+        };
+        snapshotImg.src = data.screenshotDataUrl;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      currentX = e.clientX;
+      currentY = e.clientY;
+
+      crosshairH.style.top = `${currentY}px`;
+      crosshairV.style.left = `${currentX}px`;
+
+      updateMagnifier(currentX, currentY);
+
+      if (isMouseDown && (mode === 'region' || mode === 'snip')) {
+        updateSelectionBox();
+      }
+    });
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isMouseDown = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      currentX = startX;
+      currentY = startY;
+
+      if (mode === 'region' || mode === 'snip') {
+        updateSelectionBox();
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (!isMouseDown) return;
+      isMouseDown = false;
+      confirmSelection();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        ipcRenderer.send('PICKER_FINISH', { canceled: true });
+      } else if (e.key === 'Enter') {
+        confirmSelection();
+      } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        if (e.key === 'ArrowUp') currentY = Math.max(0, currentY - step);
+        if (e.key === 'ArrowDown') currentY = Math.min(window.innerHeight - 1, currentY + step);
+        if (e.key === 'ArrowLeft') currentX = Math.max(0, currentX - step);
+        if (e.key === 'ArrowRight') currentX = Math.min(window.innerWidth - 1, currentX + step);
+
+        crosshairH.style.top = `${currentY}px`;
+        crosshairV.style.left = `${currentX}px`;
+        updateMagnifier(currentX, currentY);
+        if (isMouseDown) updateSelectionBox();
+      }
+    });
+
+    function updateMagnifier(x, y) {
+      let magLeft = x + 20;
+      let magTop = y + 20;
+      if (magLeft + 150 > window.innerWidth) magLeft = x - 160;
+      if (magTop + 200 > window.innerHeight) magTop = y - 200;
+
+      magnifierEl.style.left = `${magLeft}px`;
+      magnifierEl.style.top = `${magTop}px`;
+
+      const sampleW = 20;
+      const sampleH = 16;
+      magCtx.imageSmoothingEnabled = false;
+      magCtx.clearRect(0, 0, magCanvas.width, magCanvas.height);
+
+      if (bgCanvas) {
+        magCtx.drawImage(
+          bgCanvas,
+          Math.max(0, x - sampleW / 2),
+          Math.max(0, y - sampleH / 2),
+          sampleW,
+          sampleH,
+          0,
+          0,
+          magCanvas.width,
+          magCanvas.height
+        );
+      }
+
+      // Read real pixel color from snapshot
+      let hexColor = '#000000';
+      try {
+        const p = bgCtx.getImageData(x, y, 1, 1).data;
+        hexColor = `#${((1 << 24) + (p[0] << 16) + (p[1] << 8) + p[2]).toString(16).slice(1).toUpperCase()}`;
+      } catch (err) {}
+
+      // Crosshair inside magnifier
+      const cx = magCanvas.width / 2;
+      const cy = magCanvas.height / 2;
+      magCtx.strokeStyle = '#ef4444';
+      magCtx.lineWidth = 1.5;
+      magCtx.strokeRect(cx - 3, cy - 3, 6, 6);
+
+      // Display Physical Screen Coordinates
+      const physX = Math.round(x * scaleX);
+      const physY = Math.round(y * scaleY);
+      document.getElementById('mag-coords').textContent = `${physX}, ${physY}`;
+      document.getElementById('mag-color-hex').textContent = hexColor;
+      document.getElementById('mag-color-thumb').style.backgroundColor = hexColor;
+    }
+
+    function updateSelectionBox() {
+      const minX = Math.min(startX, currentX);
+      const minY = Math.min(startY, currentY);
+      const maxX = Math.max(startX, currentX);
+      const maxY = Math.max(startY, currentY);
+      const w = maxX - minX;
+      const h = maxY - minY;
+
+      selectionBoxEl.style.display = 'block';
+      selectionBoxEl.style.left = `${minX}px`;
+      selectionBoxEl.style.top = `${minY}px`;
+      selectionBoxEl.style.width = `${w}px`;
+      selectionBoxEl.style.height = `${h}px`;
+    }
+
+    function confirmSelection() {
+      const physCurrentX = Math.round(currentX * scaleX);
+      const physCurrentY = Math.round(currentY * scaleY);
+
+      if (mode === 'coordinate') {
+        ipcRenderer.send('PICKER_FINISH', { x: physCurrentX, y: physCurrentY, canceled: false });
+        return;
+      }
+
+      if (mode === 'color') {
+        let hexColor = document.getElementById('mag-color-hex').textContent;
+        ipcRenderer.send('PICKER_FINISH', { x: physCurrentX, y: physCurrentY, color: hexColor, canceled: false });
+        return;
+      }
+
+      const minX = Math.min(startX, currentX);
+      const minY = Math.min(startY, currentY);
+      const maxX = Math.max(startX, currentX);
+      const maxY = Math.max(startY, currentY);
+
+      const physX1 = Math.round(minX * scaleX);
+      const physY1 = Math.round(minY * scaleY);
+      const physX2 = Math.round(maxX * scaleX);
+      const physY2 = Math.round(maxY * scaleY);
+      const physW = physX2 - physX1;
+      const physH = physY2 - physY1;
+
+      if (physW < 3 || physH < 3) return;
+
+      let croppedDataUrl = '';
+      if (mode === 'snip' && snapshotImg) {
+        try {
+          // Crop directly from 100% RAW snapshot image (framebuffer fidelity)
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = physW;
+          cropCanvas.height = physH;
+          const cropCtx = cropCanvas.getContext('2d');
+          cropCtx.drawImage(snapshotImg, physX1, physY1, physW, physH, 0, 0, physW, physH);
+          croppedDataUrl = cropCanvas.toDataURL('image/png');
+        } catch (err) {}
+      }
+
+      ipcRenderer.send('PICKER_FINISH', {
+        x1: physX1,
+        y1: physY1,
+        x2: physX2,
+        y2: physY2,
+        width: physW,
+        height: physH,
+        croppedDataUrl,
+        canceled: false
+      });
+    }
+  </script>
+</body>
+</html>

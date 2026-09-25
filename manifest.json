@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Mory-Automation (魔力自动化) - 轻量级现代自动化工作流引擎",
+  "version": "1.0.0",
+  "author": "Mory <hello@moryhub.com>",
+  "description": "Mory-Automation (魔力自动化) - 来自 MORY HUB (www.moryhub.com)。轻量级现代自动化工作流引擎，支持拖拽编排、桌面/网页双模驱动、高精找图与离线文字识别。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "icons/icon48.png",
+    "default_title": "Mory-Automation (魔力自动化)"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "debugger"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/picker.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*", "content/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "name": "mory-automation",
+  "version": "1.0.0",
+  "description": "Mory-Automation (魔力自动化) v1.0.0 - 轻量级现代自动化工作流引擎 | MORY HUB (www.moryhub.com)",
+  "main": "electron/main.cjs",
+  "homepage": "https://www.moryhub.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SuperMory/mory-automation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SuperMory/mory-automation/issues"
+  },
+  "scripts": {
+    "start": "electron .",
+    "start:desktop": "electron .",
+    "start:ext": "node serve.js",
+    "generate-icons": "node generate-icons.js",
+    "build:exe": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis",
+    "build:all": "electron-builder --win"
+  },
+  "keywords": [
+    "rpa",
+    "mory-automation",
+    "workflow-engine",
+    "automation",
+    "chrome-extension",
+    "edge-extension",
+    "electron",
+    "desktop-automation",
+    "workflow",
+    "drag-and-drop",
+    "image-match",
+    "ocr",
+    "魔力自动化",
+    "mory-hub"
+  ],
+  "author": {
+    "name": "Mory",
+    "email": "hello@moryhub.com",
+    "url": "https://www.moryhub.com"
+  },
+  "license": "MIT",
+  "build": {
+    "appId": "com.moryhub.automation",
+    "productName": "Mory-Automation",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "designer/**/*",
+      "icons/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/bin/win-input.exe",
+        "to": "electron/bin/win-input.exe"
+      },
+      {
+        "from": "electron/win-ocr.ps1",
+        "to": "electron/win-ocr.ps1"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icons/icon256.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  }
+}

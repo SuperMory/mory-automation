@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mory-Automation (魔力自动化) - 轻量级现代自动化工作流引擎 | MORY HUB</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <div class="logo-area">
+        <img src="../icons/icon48.png" alt="Mory-Automation" class="logo">
+        <div>
+          <div class="title">Mory-Automation</div>
+          <div class="subtitle">魔力自动化 · 轻量级工作流引擎</div>
+        </div>
+      </div>
+      <span class="version">v1.0.0</span>
+    </div>
+
+    <!-- Active Tab Status -->
+    <div class="card current-tab-card">
+      <div class="card-label">当前网页</div>
+      <div class="tab-title" id="active-tab-title">正在检测当前网页...</div>
+      <div class="tab-url" id="active-tab-url"></div>
+    </div>
+
+    <!-- Main Primary Action -->
+    <button type="button" class="btn btn-primary" id="btn-open-designer">
+      <span class="btn-icon">⚡</span> 打开流程设计器 (工作台)
+    </button>
+
+    <!-- Quick Utilities -->
+    <div class="quick-tools">
+      <div class="section-title">快捷工具</div>
+      <div class="tools-grid">
+        <button type="button" class="tool-btn" id="btn-quick-run" title="在当前网页执行上次编排的流程">
+          <span class="tool-icon">▶</span>
+          <span>运行流程</span>
+        </button>
+        <button type="button" class="tool-btn" id="btn-quick-coord" title="测试坐标拾取">
+          <span class="tool-icon">🎯</span>
+          <span>选取坐标</span>
+        </button>
+        <button type="button" class="tool-btn" id="btn-quick-snip" title="测试屏幕截图选区">
+          <span class="tool-icon">✂</span>
+          <span>屏幕截图</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer-tip">
+      <div style="margin-bottom: 5px;">来自 <a href="https://www.moryhub.com" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 500;">MORY HUB (www.moryhub.com)</a> · Mory-Automation</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 11px;">
+        <a href="https://github.com/SuperMory/mory-automation" target="_blank" style="color: #64748b; text-decoration: none; font-weight: 500;">GitHub 开源</a>
+        <span style="color: #cbd5e1;">·</span>
+        <a href="https://gitee.com/mzh5544/mory-automation" target="_blank" style="color: #c71d23; text-decoration: none; font-weight: 500;">Gitee 镜像</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

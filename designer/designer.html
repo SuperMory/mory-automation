@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mory-Automation (魔力自动化) - 轻量级现代自动化工作流引擎 | MORY HUB</title>
+  <link rel="stylesheet" href="designer.css">
+  <link rel="icon" type="image/png" href="../icons/icon48.png">
+</head>
+<body>
+  <div class="mory-app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="mory-topbar">
+      <div class="mory-brand">
+        <!-- Brand Logo Icon -->
+        <img src="../icons/icon48.png" alt="Mory-Automation (魔力自动化)" class="mory-brand-icon">
+
+        <!-- Column 1: Title & MORY HUB 出品 (一上一下) -->
+        <div class="mory-brand-col-title">
+          <span class="mory-brand-title">Mory-Automation</span>
+          <a href="https://www.moryhub.com" target="_blank" rel="noopener noreferrer" class="mory-brand-origin-link" title="访问官方网站 www.moryhub.com">
+            <span>MORY HUB 出品</span>
+          </a>
+        </div>
+
+        <!-- Column 2: 魔力自动化 & 版本号 (一上一下) -->
+        <div class="mory-brand-col-stacked">
+          <span class="mory-brand-badge">魔力自动化</span>
+          <span class="mory-version-badge" title="当前版本 v1.0.0">v1.0.0</span>
+        </div>
+
+        <!-- Column 3: 桌面便携版 (EXE) -->
+        <div class="mory-brand-col-env">
+          <span class="mory-env-tag" id="mory-env-tag">桌面便携版 (EXE)</span>
+        </div>
+
+        <!-- Column 4: GitHub & Gitee 开源仓库 (一上一下) -->
+        <div class="mory-repo-col">
+          <a href="https://github.com/SuperMory/mory-automation" target="_blank" rel="noopener noreferrer" class="mory-repo-btn github" title="查看 GitHub 开源仓库 (https://github.com/SuperMory/mory-automation)">
+            <svg height="11" viewBox="0 0 16 16" width="11" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.01 8.01 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2 .27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9 1.45 1.04.59.12 1.34-.14 1.7-.35 0 .66.01 1.24.01 1.43 0 .21-.15.46-.55.38A8.01 8.01 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+            <span>GitHub</span>
+          </a>
+          <a href="https://gitee.com/mzh5544/mory-automation" target="_blank" rel="noopener noreferrer" class="mory-repo-btn gitee" title="查看 Gitee (码云) 开源仓库 (https://gitee.com/mzh5544/mory-automation)">
+            <svg height="11" viewBox="0 0 1024 1024" width="11" fill="currentColor"><path d="M512 1024C229.222 1024 0 794.778 0 512S229.222 0 512 0s512 229.222 512 512-229.222 512-512 512z m259.149-568.889h-290.745c-15.232 0-27.648 12.416-27.648 27.648v55.296c0 15.232 12.416 27.648 27.648 27.648h180.153c15.232 0 27.648 12.416 27.648 27.648v27.648c0 76.16-62.08 138.24-138.24 138.24H373.547c-15.232 0-27.648-12.416-27.648-27.648V426.667c0-76.16 62.08-138.24 138.24-138.24h287.01c15.232 0 27.648-12.416 27.648-27.648v-55.296c0-15.232-12.416-27.648-27.648-27.648H484.139C346.738 177.829 235.32 289.246 235.32 426.647v342.336c0 15.232 12.416 27.648 27.648 27.648h280.96c152.064 0 276.48-124.416 276.48-276.48v-137.643c0-15.232-12.416-27.619-27.648-27.619z"/></svg>
+            <span>Gitee</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Target Web Page Selector -->
+      <div class="mory-topbar-center">
+        <div class="mory-target-tab-select">
+          <span>🎯 执行目标网页:</span>
+          <select id="sel-target-tab" title="选择将在哪个网页标签上执行此自动化流程">
+            <option value="">正在检测可用标签页...</option>
+          </select>
+          <button type="button" class="mory-btn-outline" id="btn-refresh-tabs" style="padding: 2px 8px; font-size: 12px;">刷新</button>
+        </div>
+      </div>
+
+      <!-- Flow Run & File Actions -->
+      <div class="mory-topbar-actions">
+        <!-- Floating HUD toggle button -->
+        <button type="button" class="mory-btn mory-btn-light" id="btn-toggle-floating-hud" title="打开/关闭桌面悬浮控制条 (可悬浮在其他软件窗口上方随时启动、暂停、停止流程)" style="display: flex; align-items: center; gap: 5px;">
+          <span>📌</span> <span>浮窗</span>
+        </button>
+
+        <button type="button" class="mory-btn mory-btn-confirm" id="btn-run-flow" style="display: flex; align-items: center; gap: 6px;">
+          <span>▶</span> 运行流程
+        </button>
+        <button type="button" class="mory-btn mory-btn-light" id="btn-pause-flow" style="display: none;">
+          <span>⏸</span> 暂停
+        </button>
+        <button type="button" class="mory-btn mory-btn-light" id="btn-stop-flow" style="display: none; color: #ef4444; border-color: #fca5a5;">
+          <span>⏹</span> 停止
+        </button>
+
+        <div style="width: 1px; height: 20px; background: #e2e8f0; margin: 0 4px;"></div>
+
+        <!-- Wide Screen Direct Buttons -->
+        <div class="mory-file-btns-wide" id="file-btns-wide">
+          <button type="button" class="mory-btn-light" id="btn-demo-flow" title="加载包含找图、移动、点击、滚动的完整示例流程">
+            <span>⭐</span> 示例模板
+          </button>
+          <button type="button" class="mory-btn-light" id="btn-import-flow" title="导入已有流程 JSON 文件">
+            <span>📁</span> 导入
+          </button>
+          <button type="button" class="mory-btn-light" id="btn-export-flow" title="将当前流程导出为 JSON 文件备份或分享">
+            <span>💾</span> 导出
+          </button>
+          <button type="button" class="mory-btn-light" id="btn-clear-canvas" title="清空当前画布">
+            <span>🧹</span> 清空
+          </button>
+        </div>
+
+        <!-- Compact / Medium Screen Integrated Dropdown Menu -->
+        <div class="mory-file-dropdown-wrap" id="file-dropdown-wrap">
+          <button type="button" class="mory-btn mory-btn-light" id="btn-file-dropdown" title="流程文件操作菜单" style="display: flex; align-items: center; gap: 4px;">
+            <span>📂</span> <span>流程文件</span> <span style="font-size: 10px; opacity: 0.7;">▾</span>
+          </button>
+          <div class="mory-file-dropdown-menu" id="file-dropdown-menu" style="display: none;">
+            <div class="mory-dropdown-item" id="menu-item-demo"><span>⭐</span> 加载示例模板</div>
+            <div class="mory-dropdown-item" id="menu-item-import"><span>📁</span> 导入流程 JSON</div>
+            <div class="mory-dropdown-item" id="menu-item-export"><span>💾</span> 导出当前流程</div>
+            <div class="mory-dropdown-divider"></div>
+            <div class="mory-dropdown-item danger" id="menu-item-clear"><span>🧹</span> 清空当前画布</div>
+          </div>
+        </div>
+        <input type="file" id="inp-import-file" accept=".json" style="display: none;">
+      </div>
+    </header>
+
+    <!-- Center Studio Body -->
+    <div class="mory-studio-body">
+      <!-- Left Sidebar: Action Library -->
+      <aside class="mory-sidebar">
+        <div class="mory-sidebar-header">
+          <span>动作组件库</span>
+          <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">拖拽至右侧画布</span>
+        </div>
+        <div class="mory-sidebar-content" id="sidebar-action-library">
+          <!-- Dynamically populated from ActionRegistry -->
+        </div>
+      </aside>
+
+      <!-- Center Flow Canvas Area -->
+      <main class="mory-canvas-container" id="canvas-container">
+        <!-- FlowCanvas mounts here -->
+
+        <!-- In-App Floating Mini Controller HUD -->
+        <div class="mory-floating-hud" id="in-app-floating-hud" style="display: none;">
+          <div class="mory-hud-handle" title="按住拖拽移动悬浮窗">⋮⋮</div>
+          <div class="mory-hud-status">
+            <span class="mory-hud-dot" id="in-app-hud-dot"></span>
+            <span class="mory-hud-text" id="in-app-hud-text">就绪</span>
+          </div>
+          <div class="mory-hud-actions">
+            <button type="button" class="mory-hud-btn btn-run" id="in-app-hud-run" title="启动流程">▶</button>
+            <button type="button" class="mory-hud-btn btn-pause" id="in-app-hud-pause" title="暂停" style="display: none;">⏸</button>
+            <button type="button" class="mory-hud-btn btn-stop" id="in-app-hud-stop" title="停止" style="display: none;">⏹</button>
+            <button type="button" class="mory-hud-btn" id="in-app-hud-close" title="隐藏悬浮窗">&times;</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Execution Log Panel -->
+    <footer class="mory-log-panel" id="log-panel">
+      <div class="mory-log-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>📋 流程执行日志与状态</span>
+          <span id="log-status-tag" style="font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #334155; color: #cbd5e1;">就绪</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btn-clear-logs" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px;">清空日志</button>
+          <button type="button" id="btn-toggle-logs" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px;">折叠 ▾</button>
+        </div>
+      </div>
+      <div class="mory-log-list" id="log-list">
+        <div class="mory-log-line info">
+          <span class="mory-log-time">[系统初始化]</span>
+          <span>Mory-Automation (魔力自动化) v1.0.0 正式版就绪 · 来自 MORY HUB (www.moryhub.com)。开源仓库：GitHub (github.com/SuperMory/mory-automation) | Gitee (gitee.com/mzh5544/mory-automation)。从左侧动作库拖拽组件到画布即可开始编排。</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="designer.js"></script>
+</body>
+</html>
