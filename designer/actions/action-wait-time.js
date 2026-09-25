@@ -27,20 +27,32 @@ export const ActionWaitTime = {
     return modal;
   },
   async execute(context, config) {
-    const ms = config.unit === 's' ? config.duration * 1000 : config.duration;
-    context.logger.info(`[等待时间] 等待 ${ms} 毫秒...`);
+    let rawDuration = Number(config?.duration);
+    if (isNaN(rawDuration) || rawDuration < 0) rawDuration = 100;
+    const unit = String(config?.unit || 'ms').toLowerCase();
+    const isSeconds = unit === 's' || unit === 'sec' || unit === 'second' || unit.includes('秒');
+    const ms = Math.max(0, Math.round(isSeconds ? rawDuration * 1000 : rawDuration));
 
-    // Interruptible sleep checking cancellation every 100ms
-    const step = 100;
-    let elapsed = 0;
-    while (elapsed < ms) {
-      if (context.isCancelled && context.isCancelled()) {
+    context.logger.info(`[等待时间] 等待 ${ms} 毫秒 (${isSeconds ? rawDuration + '秒' : rawDuration + 'ms'})...`);
+
+    if (context.sleep) {
+      const res = await context.sleep(ms, '等待时间');
+      if (res.cancelled) {
         context.logger.warn('[等待时间] 等待被用户终止');
         return { success: false, stopWorkflow: true };
       }
-      const wait = Math.min(step, ms - elapsed);
-      await new Promise(r => setTimeout(r, wait));
-      elapsed += wait;
+    } else {
+      // Fallback robust sleep with wall-clock precision (immune to timer drift & background throttling)
+      const startTime = Date.now();
+      while (Date.now() - startTime < ms) {
+        if (context.isCancelled && context.isCancelled()) {
+          context.logger.warn('[等待时间] 等待被用户终止');
+          return { success: false, stopWorkflow: true };
+        }
+        const remaining = ms - (Date.now() - startTime);
+        if (remaining <= 0) break;
+        await new Promise(r => setTimeout(r, Math.min(50, remaining)));
+      }
     }
 
     return { success: true, nextPort: 'default' };

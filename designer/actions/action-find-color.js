@@ -91,7 +91,12 @@ export const ActionFindColor = {
       }
 
       if (attempt < maxAttempts) {
-        await new Promise(r => setTimeout(r, interval));
+        if (context.sleep) {
+          const res = await context.sleep(interval, '找色重试等待');
+          if (res.cancelled) break;
+        } else {
+          await new Promise(r => setTimeout(r, interval));
+        }
       }
     }
 
@@ -142,7 +147,11 @@ export const ActionFindColor = {
 
     if (failConfig.enabled && failConfig.waitTime > 0) {
       context.logger.info(`[找色失败] 等待 ${failConfig.waitTime} 毫秒...`);
-      await new Promise(r => setTimeout(r, failConfig.waitTime));
+      if (context.sleep) {
+        await context.sleep(failConfig.waitTime, '找色失败等待');
+      } else {
+        await new Promise(r => setTimeout(r, failConfig.waitTime));
+      }
     }
 
     if (failConfig.nextAction === 'stop') {

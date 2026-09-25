@@ -73,7 +73,10 @@
           ]
         }
       ],
-      "icon": "icons/icon256.png"
+      "icon": "icons/icon.ico"
+    },
+    "portable": {
+      "artifactName": "魔力自动化-Mory-Automation-v${version}.${ext}"
     }
   },
   "devDependencies": {

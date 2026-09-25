@@ -28,9 +28,18 @@ export const ActionStart = {
     return modal;
   },
   async execute(context, config) {
-    if (config && config.startDelay > 0) {
-      context.logger.info(`[开始流程] 延时准备: 等待 ${config.startDelay} 秒...`);
-      await new Promise(r => setTimeout(r, config.startDelay * 1000));
+    const delaySec = Math.max(0, Number(config?.startDelay) || 0);
+    if (delaySec > 0) {
+      context.logger.info(`[开始流程] 延时准备: 等待 ${delaySec} 秒...`);
+      if (context.sleep) {
+        const res = await context.sleep(delaySec * 1000, '开始延时');
+        if (res.cancelled) {
+          context.logger.warn('[开始流程] 流程在启动等待阶段被终止');
+          return { success: false, stopWorkflow: true };
+        }
+      } else {
+        await new Promise(r => setTimeout(r, delaySec * 1000));
+      }
     }
     context.logger.success('[开始流程] 自动化流程正式开始执行 ✔');
     return { success: true, nextPort: 'default' };

@@ -29,9 +29,21 @@ export const ActionDelay = {
     }
   },
   async execute(context, config) {
-    const ms = config.unit === 's' ? config.duration * 1000 : config.duration;
+    let rawDuration = Number(config?.duration);
+    if (isNaN(rawDuration) || rawDuration < 0) rawDuration = 1000;
+    const unit = String(config?.unit || 'ms').toLowerCase();
+    const isSeconds = unit === 's' || unit === 'sec' || unit.includes('秒');
+    const ms = Math.max(0, Math.round(isSeconds ? rawDuration * 1000 : rawDuration));
+
     context.logger.info(`[延时等待] 等待 ${ms}ms...`);
-    await new Promise(r => setTimeout(r, ms));
+    if (context.sleep) {
+      const res = await context.sleep(ms, '延时等待');
+      if (res.cancelled) {
+        return { success: false, stopWorkflow: true };
+      }
+    } else {
+      await new Promise(r => setTimeout(r, ms));
+    }
     return { success: true, nextPort: 'default' };
   }
 };

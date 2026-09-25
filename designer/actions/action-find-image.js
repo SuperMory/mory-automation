@@ -106,13 +106,17 @@ export const ActionFindImage = {
       }
 
       if (attempt < maxAttempts) {
-        const step = 50;
-        let elapsed = 0;
-        while (elapsed < interval) {
-          if (context.isCancelled && context.isCancelled()) break;
-          const wait = Math.min(step, interval - elapsed);
-          await new Promise(r => setTimeout(r, wait));
-          elapsed += wait;
+        if (context.sleep) {
+          const res = await context.sleep(interval, '重试等待');
+          if (res.cancelled) break;
+        } else {
+          const start = Date.now();
+          while (Date.now() - start < interval) {
+            if (context.isCancelled && context.isCancelled()) break;
+            const remaining = interval - (Date.now() - start);
+            if (remaining <= 0) break;
+            await new Promise(r => setTimeout(r, Math.min(50, remaining)));
+          }
         }
       }
     }
@@ -168,13 +172,16 @@ export const ActionFindImage = {
 
     if (failConfig.enabled && failConfig.waitTime > 0) {
       context.logger.info(`[找图失败] 等待 ${failConfig.waitTime} 毫秒...`);
-      const step = 100;
-      let elapsed = 0;
-      while (elapsed < failConfig.waitTime) {
-        if (context.isCancelled && context.isCancelled()) break;
-        const wait = Math.min(step, failConfig.waitTime - elapsed);
-        await new Promise(r => setTimeout(r, wait));
-        elapsed += wait;
+      if (context.sleep) {
+        await context.sleep(failConfig.waitTime, '找图失败等待');
+      } else {
+        const start = Date.now();
+        while (Date.now() - start < failConfig.waitTime) {
+          if (context.isCancelled && context.isCancelled()) break;
+          const remaining = failConfig.waitTime - (Date.now() - start);
+          if (remaining <= 0) break;
+          await new Promise(r => setTimeout(r, Math.min(50, remaining)));
+        }
       }
     }
 

@@ -33,6 +33,70 @@ export class FlowExecutor {
   }
 
   /**
+   * Create context for action execution with wall-clock precision interruptible sleep
+   */
+  createExecutionContext(curNode = null) {
+    const isCancelled = () => this.isStopRequested;
+    const isPaused = () => this.isPaused;
+
+    const sleep = async (totalMs, stepName = '等待') => {
+      const ms = Math.max(0, Number(totalMs) || 0);
+      if (ms <= 0) return { cancelled: false };
+
+      const startTime = Date.now();
+      let pausedDuration = 0;
+      let lastReportSec = -1;
+
+      while (true) {
+        // 1. Check termination
+        if (this.isStopRequested) {
+          return { cancelled: true };
+        }
+
+        // 2. Check and wait for pause
+        if (this.isPaused) {
+          const pauseStart = Date.now();
+          while (this.isPaused && !this.isStopRequested) {
+            await new Promise(r => setTimeout(r, 60));
+          }
+          pausedDuration += (Date.now() - pauseStart);
+          if (this.isStopRequested) {
+            return { cancelled: true };
+          }
+        }
+
+        // 3. Wall-clock elapsed calculation (immune to Chromium background throttling)
+        const actualElapsed = Date.now() - startTime - pausedDuration;
+        const remaining = ms - actualElapsed;
+        if (remaining <= 0) break;
+
+        // 4. Live progress report for long waits (>= 3s)
+        if (ms >= 3000) {
+          const remainingSec = Math.ceil(remaining / 1000);
+          if (remainingSec % 2 === 0 && remainingSec !== lastReportSec && remainingSec > 0) {
+            lastReportSec = remainingSec;
+            this.logger.info(`[${stepName}] 倒计时剩余 ${remainingSec} 秒...`);
+          }
+        }
+
+        // 5. Short sleep slice (up to 50ms) for ultra-fast Stop/Pause reaction
+        const slice = Math.min(50, remaining);
+        await new Promise(r => setTimeout(r, slice));
+      }
+
+      return { cancelled: false };
+    };
+
+    return {
+      tabBridge: this.tabBridge,
+      logger: this.logger,
+      isCancelled,
+      isPaused,
+      sleep
+    };
+  }
+
+  /**
    * Execute single node (for debugging)
    */
   async executeSingleNode(node) {
@@ -45,11 +109,7 @@ export class FlowExecutor {
     this.logger.info(`[单步调试] 开始执行节点: 【${actionDef.name}】(${node.id})`);
     this.onNodeStateChange(node.id, 'active');
 
-    const context = {
-      tabBridge: this.tabBridge,
-      logger: this.logger,
-      isCancelled: () => this.isStopRequested
-    };
+    const context = this.createExecutionContext(node);
 
     try {
       const res = await actionDef.execute(context, node.config);
@@ -87,9 +147,14 @@ export class FlowExecutor {
 
     this.logger.info(`================ 开始执行自动化流程 (共 ${nodes.length} 个步骤) ================`);
 
-    // Build node map
+    // Build node map and reset any temporary runtime counters
     const nodeMap = new Map();
-    nodes.forEach(n => nodeMap.set(n.id, n));
+    nodes.forEach(n => {
+      nodeMap.set(n.id, n);
+      if (n.config && typeof n.config._counter !== 'undefined') {
+        n.config._counter = 0;
+      }
+    });
 
     // Find starting node
     let startNode = null;
@@ -118,7 +183,7 @@ export class FlowExecutor {
 
       // Handle pause
       while (this.isPaused && !this.isStopRequested) {
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 100));
       }
       if (this.isStopRequested) break;
 
@@ -133,11 +198,7 @@ export class FlowExecutor {
       this.onNodeStateChange(curNode.id, 'active');
       this.logger.info(`[步骤 ${stepCount}] 正在执行: 【${curNode.name || actionDef.name}】(${curNode.id})...`);
 
-      const context = {
-        tabBridge: this.tabBridge,
-        logger: this.logger,
-        isCancelled: () => this.isStopRequested
-      };
+      const context = this.createExecutionContext(curNode);
 
       let result = null;
       try {

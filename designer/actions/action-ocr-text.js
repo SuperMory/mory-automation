@@ -98,7 +98,12 @@ export const ActionOcrText = {
       }
 
       if (attempt < maxAttempts) {
-        await new Promise(r => setTimeout(r, interval));
+        if (context.sleep) {
+          const res = await context.sleep(interval, 'OCR重试等待');
+          if (res.cancelled) break;
+        } else {
+          await new Promise(r => setTimeout(r, interval));
+        }
       }
     }
 
@@ -157,7 +162,11 @@ export const ActionOcrText = {
 
     if (failConfig.enabled && failConfig.waitTime > 0) {
       context.logger.info(`[识别失败] 等待 ${failConfig.waitTime} 毫秒...`);
-      await new Promise(r => setTimeout(r, failConfig.waitTime));
+      if (context.sleep) {
+        await context.sleep(failConfig.waitTime, 'OCR失败等待');
+      } else {
+        await new Promise(r => setTimeout(r, failConfig.waitTime));
+      }
     }
 
     if (failConfig.nextAction === 'stop') {

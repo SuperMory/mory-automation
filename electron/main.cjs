@@ -3,6 +3,11 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const { NativeRobot } = require('./native-robot.cjs');
 
+// Disable Chromium background timer throttling so RPA workflows never freeze when window is unfocused or backgrounded
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
 let mainWindow = null;
 let pickerWindow = null;
 let highlightWindow = null;
@@ -29,7 +34,8 @@ function createFloatingWindow() {
     icon: path.join(__dirname, '..', 'icons', 'icon48.png'),
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      backgroundThrottling: false
     }
   });
 
@@ -51,11 +57,12 @@ function createMainWindow() {
     minWidth: 1024,
     minHeight: 700,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, '..', 'icons', 'icon128.png'),
+    icon: path.join(__dirname, '..', 'icons', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      backgroundThrottling: false
     }
   });
 
